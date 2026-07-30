@@ -201,6 +201,10 @@ class AUTOPAINT_PT_paint_settings(bpy.types.Panel):
             "autopaint.paint_curve",
             icon='BRUSH_DATA'
         )
+        box.operator(
+            "autopaint.clear_image",
+            icon='CLEAR_ALL'
+        )
 
 
 

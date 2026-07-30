@@ -64,7 +64,11 @@ def project_points_to_mesh(mesh_obj, points):
 
     depsgraph = bpy.context.evaluated_depsgraph_get()
 
-    eval_obj = mesh_obj.evaluated_get(depsgraph)
+    bpy.context.view_layer.update()
+
+    eval_obj = mesh_obj.evaluated_get(
+        depsgraph
+    )
 
     mw = eval_obj.matrix_world
     mw_inv = mw.inverted()
@@ -76,7 +80,9 @@ def project_points_to_mesh(mesh_obj, points):
         local_point = mw_inv @ p
 
         success, hit_location, normal, face_index = (
-            eval_obj.closest_point_on_mesh(local_point)
+            eval_obj.closest_point_on_mesh(
+                local_point
+            )
         )
 
         if success:
@@ -130,6 +136,16 @@ def get_uv_from_hit(mesh_obj, hit):
         uv2 = Vector((uv_data[i2].uv.x, uv_data[i2].uv.y, 0.0))
         uv3 = Vector((uv_data[i3].uv.x, uv_data[i3].uv.y, 0.0))      
         
+        pt = intersect_point_tri(
+            loc,
+            v1,
+            v2,
+            v3
+        )
+
+        if pt is None:
+            continue
+
         uv = barycentric_transform(
             loc,
             v1,
@@ -372,50 +388,91 @@ def paint_uv_line(
         )
 
 def paint_brush_on_image(
-pixels,
-width,
-height,
-center_x,
-center_y,
-brush_image,
-color,
-opacity=1.0
+    pixels,
+    width,
+    height,
+    center_x,
+    center_y,
+    brush_image,
+    brush_size,
+    color,
+    opacity=1.0
 ):
-
-    print("ENTER BRUSH")
-
     if brush_image is None:
         return
 
-    bw = brush_image.size[0]
-    bh = brush_image.size[1]
-
-    print("WIDTH =", bw, "HEIGHT =", bh)
-
     brush_pixels = list(
         brush_image.pixels[:]
-)
+    )
 
-    start_x = center_x - (bw // 2)
-    start_y = center_y - (bh // 2)
+    src_w = brush_image.size[0]
+    src_h = brush_image.size[1]
+
+    # Kích thước brush sau khi scale
+    dst_w = max(
+        1,
+        int(brush_size)
+    )
+
+    dst_h = max(
+        1,
+        int(brush_size)
+    )
+
+    start_x = center_x - dst_w // 2
+    start_y = center_y - dst_h // 2
 
     painted = 0
 
-    for by in range(bh):
+    for y in range(dst_h):
 
-        for bx in range(bw):
+        for x in range(dst_w):
 
-            brush_index = (
-                (by * bw + bx) * 4
+            # Sample từ brush gốc
+            src_x = int(
+                (x / dst_w) * src_w
             )
 
-            alpha = brush_pixels[brush_index + 3]
+            src_y = int(
+                (y / dst_h) * src_h
+            )
 
-            if alpha <= 0.001:
+            src_x = min(
+                src_x,
+                src_w - 1
+            )
+
+            src_y = min(
+                src_y,
+                src_h - 1
+            )
+
+            brush_index = (
+                (src_y * src_w + src_x)
+                * 4
+            )
+
+            br = brush_pixels[
+                brush_index + 0
+            ]
+
+            bg = brush_pixels[
+                brush_index + 1
+            ]
+
+            bb = brush_pixels[
+                brush_index + 2
+            ]
+
+            ba = brush_pixels[
+                brush_index + 3
+            ]
+
+            if ba <= 0.001:
                 continue
 
-            px = start_x + bx
-            py = start_y + by
+            px = start_x + x
+            py = start_y + y
 
             if (
                 px < 0 or
@@ -425,37 +482,51 @@ opacity=1.0
             ):
                 continue
 
-            img_index = ((py * width + px) * 4)
-
-            blend = alpha * opacity
-
-            
-
-
-
-            pixels[img_index + 0] = (
-                pixels[img_index + 0] * (1.0 - blend)
-                + color[0] * blend
-            )
-           
-
-            pixels[img_index + 1] = (
-                pixels[img_index + 1] * (1.0 - blend)
-                + color[1] * blend
+            img_index = (
+                (py * width + px)
+                * 4
             )
 
-            pixels[img_index + 2] = (
-                pixels[img_index + 2] * (1.0 - blend)
-                + color[2] * blend
+            alpha = ba * opacity
+
+            pixels[
+                img_index + 0
+            ] = (
+                pixels[
+                    img_index + 0
+                ] * (1.0 - alpha)
+                + br * color[0] * alpha
             )
 
-            pixels[img_index + 3] = max(
-                pixels[img_index + 3],
-                blend
+            pixels[
+                img_index + 1
+            ] = (
+                pixels[
+                    img_index + 1
+                ] * (1.0 - alpha)
+                + bg * color[1] * alpha
+            )
+
+            pixels[
+                img_index + 2
+            ] = (
+                pixels[
+                    img_index + 2
+                ] * (1.0 - alpha)
+                + bb * color[2] * alpha
+            )
+
+            pixels[
+                img_index + 3
+            ] = max(
+                pixels[
+                    img_index + 3
+                ],
+                alpha
             )
 
             painted += 1
 
     print(
-    f"STAMP PIXELS = {painted}"
-)   
+        f"STAMP PIXELS = {painted}"
+    )

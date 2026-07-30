@@ -915,11 +915,13 @@ class AUTOPAINT_OT_paint_curve(bpy.types.Operator):
             settings.brush_count
         )
 
+        print("CURVE POINTS =", len(points))
+
         hits = project_points_to_mesh(
             mesh_obj,
             points
         )
-
+        print("HITS =", len(hits))
         width = image.size[0]
         height = image.size[1]
 
@@ -977,7 +979,7 @@ class AUTOPAINT_OT_paint_curve(bpy.types.Operator):
                 image,
                 uv
             )
-
+            print(px, py)
             if brush:
 
                 paint_brush_on_image(
@@ -987,6 +989,7 @@ class AUTOPAINT_OT_paint_curve(bpy.types.Operator):
                     px,
                     py,
                     brush,
+                    settings.brush_size,
                     color,
                     opacity
                 )
@@ -1022,7 +1025,40 @@ class AUTOPAINT_OT_paint_curve(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class AUTOPAINT_OT_clear_image(bpy.types.Operator):
+    bl_idname = "autopaint.clear_image"
+    bl_label = "Clear Paint"
 
+    def execute(self, context):
+
+        image = bpy.data.images.get(
+            "AP_IMG_1"
+        )
+
+        if image is None:
+
+            self.report(
+                {'ERROR'},
+                "AP_IMG_1 not found"
+            )
+
+            return {'CANCELLED'}
+
+        pixels = [0.0] * (
+            image.size[0] *
+            image.size[1] *
+            4
+        )
+
+        image.pixels[:] = pixels
+        image.update()
+
+        self.report(
+            {'INFO'},
+            "Image Cleared"
+        )
+
+        return {'FINISHED'}
 
 
 
@@ -1033,7 +1069,8 @@ class MESH_OT_add_cube_button(bpy.types.Operator):
 
     def execute(self, context):
         # This calls Blender's built-in operator to add a primitive cube
-        bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 0))
+        #bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 0))
+        bpy.ops.mesh.primitive_plane_add(size=1.0, location=(0, 0, 0))
         return {'FINISHED'}
 
 
@@ -1056,7 +1093,9 @@ classes = (AUTOPAINT_OT_generate_path,
             AUTOPAINT_OT_project_points,
             AUTOPAINT_OT_debug_uv,
             AUTOPAINT_OT_paint_curve,
-            MESH_OT_add_cube_button
+            MESH_OT_add_cube_button,
+            AUTOPAINT_OT_clear_image
+
             )
 
 def register():
