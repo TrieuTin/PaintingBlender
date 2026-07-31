@@ -203,7 +203,7 @@ class AUTOPAINT_PT_paint_settings(bpy.types.Panel):
         )
         box.operator(
             "autopaint.clear_image",
-            icon='CLEAR_ALL'
+            icon='TRASH'
         )
 
 
