@@ -531,6 +531,19 @@ def paint_brush_on_image(
         f"STAMP PIXELS = {painted}"
     )
 def clear_image(image):
-    image.pixels[:] = [0.0] * (image.width * image.height * 4)
+    width = image.size[0]
+    height = image.size[1]
+
+    pixels = [0.0] * (
+        width *
+        height *
+        4
+    )
+
+    image.pixels[:] = pixels
+
     image.update()
-    print ("Clear image")
+
+    print(
+        "IMAGE CLEARED"
+    )

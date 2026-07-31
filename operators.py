@@ -1131,27 +1131,40 @@ class MESH_OT_add_cube_button(bpy.types.Operator):
 
 
 
-class AUTOPAINT_OT_refresh_paint(bpy.types.Operator):
+class AUTOPAINT_OT_refresh_paint(
+    bpy.types.Operator
+):
+
     bl_idname = "autopaint.refresh_paint"
     bl_label = "Refresh Paint"
-    
+
     def execute(self, context):
-        image = bpy.data.images.get("AP_IMG_1")
+
+        image = bpy.data.images.get(
+            "AP_IMG_1"
+        )
+
         if image is None:
+
             self.report(
                 {'ERROR'},
                 "AP_IMG_1 not found"
             )
+
             return {'CANCELLED'}
-        clear_image(image)
+
+        clear_image(
+            image
+        )
+
         bpy.ops.autopaint.paint_curve()
 
         self.report(
             {'INFO'},
             "Paint Refreshed"
         )
-        return {'FINISHED'}
 
+        return {'FINISHED'}
 
 
 # register-------------------------------
