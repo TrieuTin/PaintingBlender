@@ -174,7 +174,10 @@ class AUTOPAINT_PT_paint_settings(bpy.types.Panel):
             "autopaint.add_layer",
             icon='PLUS'
         )
-
+        box.operator(
+            "autopaint.create_paint_layer",
+            icon='IMAGE_DATA'
+        )
         # box.operator(
         #     "mesh.add_cube_button",
         #     icon='CUBE'
@@ -204,6 +207,10 @@ class AUTOPAINT_PT_paint_settings(bpy.types.Panel):
         box.operator(
             "autopaint.clear_image",
             icon='TRASH'
+        )
+        box.operator(
+            "autopaint.refresh_paint",
+            icon='FILE_REFRESH'
         )
 
 

@@ -1,5 +1,6 @@
 # operators.py
 
+from CodePY.CurveUtils import clear_image
 from bpy.ops import brush
 from .CurveUtils import get_uv_from_hit, project_points_to_mesh
 from bl_ui import properties_data_empty
@@ -1060,7 +1061,62 @@ class AUTOPAINT_OT_clear_image(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class AUTOPAINT_OT_create_paint_layer(
+    bpy.types.Operator
+):
 
+    bl_idname = "autopaint.create_paint_layer"
+    bl_label = "Create Paint Layer"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+
+        curve_obj = context.active_object
+
+        if curve_obj is None:
+
+            self.report(
+                {'ERROR'},
+                "No active object"
+            )
+            return {'CANCELLED'}
+
+        if curve_obj.type != 'CURVE':
+
+            self.report(
+                {'ERROR'},
+                "Select a Curve"
+            )
+            return {'CANCELLED'}
+
+        image_name = (
+            "AP_LAYER_" +
+            curve_obj.name
+        )
+
+        image = bpy.data.images.get(
+            image_name
+        )
+
+        if image is None:
+
+            image = bpy.data.images.new(
+                image_name,
+                width=2048,
+                height=2048,
+                alpha=True
+            )
+
+        curve_obj[
+            "ap_layer_image"
+        ] = image.name
+
+        self.report(
+            {'INFO'},
+            f"Layer Created : {image.name}"
+        )
+
+        return {'FINISHED'}
 
 class MESH_OT_add_cube_button(bpy.types.Operator):
     bl_idname = "mesh.add_cube_button"
@@ -1075,7 +1131,26 @@ class MESH_OT_add_cube_button(bpy.types.Operator):
 
 
 
+class AUTOPAINT_OT_refresh_paint(bpy.types.Operator):
+    bl_idname = "autopaint.refresh_paint"
+    bl_label = "Refresh Paint"
+    
+    def execute(self, context):
+        image = bpy.data.images.get("AP_IMG_1")
+        if image is None:
+            self.report(
+                {'ERROR'},
+                "AP_IMG_1 not found"
+            )
+            return {'CANCELLED'}
+        clear_image(image)
+        bpy.ops.autopaint.paint_curve()
 
+        self.report(
+            {'INFO'},
+            "Paint Refreshed"
+        )
+        return {'FINISHED'}
 
 
 
@@ -1094,7 +1169,9 @@ classes = (AUTOPAINT_OT_generate_path,
             AUTOPAINT_OT_debug_uv,
             AUTOPAINT_OT_paint_curve,
             MESH_OT_add_cube_button,
-            AUTOPAINT_OT_clear_image
+            AUTOPAINT_OT_clear_image,
+            AUTOPAINT_OT_create_paint_layer,
+            AUTOPAINT_OT_refresh_paint
 
             )
 
